@@ -15,7 +15,7 @@ func TestNewAPI(t *testing.T) {
 	assert.NotNil(t, a.rateMap)
 }
 
-func TestBuildAndReplaceRateMap(t *testing.T) {
+func TestPut(t *testing.T) {
 	rd := RateDetail{
 		Days:  "mon,tues,thurs",
 		Times: "0900-2100",
@@ -30,7 +30,7 @@ func TestBuildAndReplaceRateMap(t *testing.T) {
 	assert.Nil(t, err)
 	// assert that the ratemap is seeded during instantiation
 	assert.NotNil(t, a.rateMap)
-	a.buildAndReplaceRateMap(ir)
+	a.Put(ir)
 
 	assert.NotNil(t, a.rateMap)
 	mondayRate := a.rateMap["Monday"]

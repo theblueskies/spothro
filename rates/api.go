@@ -34,8 +34,8 @@ type DayRate struct {
 
 // ParkingTimesRequest is used to deserialize and hold the input time ranges
 type ParkingTimesRequest struct {
-	StartTime time.Time `json:"start_time"`
-	EndTime   time.Time `json:"end_time"`
+	StartTime time.Time `form:"start_time", json:"start_time"`
+	EndTime   time.Time `form:"end_time" json:"end_time"`
 }
 
 // API implements the interface to get rates and store new rates
@@ -57,7 +57,7 @@ func NewAPI() (*API, error) {
 	json.Unmarshal(bytes, &ir)
 
 	a := &API{}
-	a.buildAndReplaceRateMap(ir)
+	a.Put(ir)
 
 	return a, nil
 }
@@ -75,8 +75,8 @@ type RateDetail struct {
 	Price int    `json:"price"`
 }
 
-// buildAndReplaceRateMap creates a new rate map indexed on days
-func (a *API) buildAndReplaceRateMap(ir IncomingRates) error {
+// Put creates a new rate map indexed on days
+func (a *API) Put(ir IncomingRates) error {
 	m := make(map[string][]DayRate)
 	for _, r := range ir.Rates {
 		timeRange := strings.Split(r.Times, "-")
