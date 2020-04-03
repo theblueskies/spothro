@@ -2,6 +2,7 @@ package rates
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -25,8 +26,8 @@ var dayMap = map[string]string{
 // DayRate is used to store the price for a given time range for a specific day
 type DayRate struct {
 	day       string
-	startTime int
-	endTime   int
+	startTime float32
+	endTime   float32
 	price     int
 	tz        string
 }
@@ -94,8 +95,8 @@ func (a *API) buildAndReplaceRateMap(ir IncomingRates) error {
 			}
 			dr := DayRate{
 				day:       properDayName,
-				startTime: startTime,
-				endTime:   endTime,
+				startTime: float32(startTime),
+				endTime:   float32(endTime),
 				price:     r.Price,
 				tz:        r.TZ,
 			}
@@ -116,5 +117,32 @@ func (a *API) buildAndReplaceRateMap(ir IncomingRates) error {
 
 // Get returns the rate of parking for a given time range
 func (a *API) Get(p ParkingTimesRequest) (rate int, err error) {
-	return 0, nil
+	if p.StartTime.Day() != p.EndTime.Day() {
+		return 0, errors.New("start and end time days do not match")
+	}
+	weekday := p.StartTime.Weekday()
+	rates, ok := a.rateMap[weekday.String()]
+	if !ok {
+		return 0, fmt.Errorf("could not find rates for day %s", weekday)
+	}
+
+	for _, r := range rates {
+		startHours := a.armyTime(p.StartTime)
+		endHours := a.armyTime(p.EndTime)
+
+		if startHours >= r.startTime && endHours <= r.endTime {
+			return r.price, nil
+		}
+	}
+
+	return 0, errors.New("unavailable")
+}
+
+func (a *API) armyTime(tm time.Time) float32 {
+	h, min, sec := tm.Clock()
+	minAsHours := float32(min)
+	secAsHours := float32(sec) / 3600
+	armyTime := float32(h)*100 + minAsHours + secAsHours
+
+	return armyTime
 }

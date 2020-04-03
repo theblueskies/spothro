@@ -1,6 +1,7 @@
 package rates
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -51,10 +52,40 @@ func TestGetRate(t *testing.T) {
 	a, err := NewAPI()
 	assert.Nil(t, err)
 
-	p := ParkingTimesRequest{
-		StartTime: time.Now(),
-		EndTime:   time.Now(),
+	testCases := []struct {
+		p    ParkingTimesRequest
+		rate int
+		err  error
+	}{
+		{
+			p: ParkingTimesRequest{
+				StartTime: time.Date(2020, 4, 3, 12, 30, 0, 0, time.UTC),
+				EndTime:   time.Date(2020, 4, 3, 19, 30, 0, 0, time.UTC),
+			},
+			rate: 2000,
+			err:  nil,
+		},
+		{
+			p: ParkingTimesRequest{
+				StartTime: time.Date(2020, 4, 3, 12, 30, 0, 0, time.UTC),
+				EndTime:   time.Date(2020, 4, 4, 19, 30, 0, 0, time.UTC),
+			},
+			rate: 0,
+			err:  errors.New("start and end time days do not match"),
+		},
+		{
+			p: ParkingTimesRequest{
+				StartTime: time.Date(2020, 4, 4, 07, 00, 0, 0, time.UTC),
+				EndTime:   time.Date(2020, 4, 4, 20, 00, 0, 0, time.UTC),
+			},
+			rate: 0,
+			err:  errors.New("unavailable"),
+		},
 	}
-	a.Get(p)
+	for _, tt := range testCases {
+		rate, err := a.Get(tt.p)
+		assert.Equal(t, tt.err, err)
+		assert.Equal(t, tt.rate, rate)
+	}
 
 }
