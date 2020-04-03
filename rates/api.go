@@ -2,6 +2,7 @@ package rates
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -9,6 +10,17 @@ import (
 	"sync"
 	"time"
 )
+
+// dayMap is used to convert the abbreviated days from json to full names of the days
+var dayMap = map[string]string{
+	"mon":   "Monday",
+	"tues":  "Tuesday",
+	"wed":   "Wednesday",
+	"thurs": "Thursday",
+	"fri":   "Friday",
+	"sat":   "Saturday",
+	"sun":   "Sunday",
+}
 
 // DayRate is used to store the price for a given time range for a specific day
 type DayRate struct {
@@ -19,8 +31,8 @@ type DayRate struct {
 	tz        string
 }
 
-// InputTimes is used to deserialize and hold the input time ranges
-type InputTimes struct {
+// ParkingTimesRequest is used to deserialize and hold the input time ranges
+type ParkingTimesRequest struct {
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`
 }
@@ -76,24 +88,33 @@ func (a *API) buildAndReplaceRateMap(ir IncomingRates) error {
 			return err
 		}
 		for _, day := range strings.Split(r.Days, ",") {
+			properDayName, ok := dayMap[day]
+			if !ok {
+				return fmt.Errorf("abbreviated day not present: %s", day)
+			}
 			dr := DayRate{
-				day:       day,
+				day:       properDayName,
 				startTime: startTime,
 				endTime:   endTime,
 				price:     r.Price,
 				tz:        r.TZ,
 			}
-			v, ok := m[day]
+			v, ok := m[properDayName]
 			if ok {
 				v = append(v, dr)
-				m[day] = v
+				m[properDayName] = v
 				continue
 			}
-			m[day] = []DayRate{dr}
+			m[properDayName] = []DayRate{dr}
 		}
 	}
 	a.mu.Lock()
 	a.rateMap = m
 	a.mu.Unlock()
 	return nil
+}
+
+// Get returns the rate of parking for a given time range
+func (a *API) Get(p ParkingTimesRequest) (rate int, err error) {
+	return 0, nil
 }
