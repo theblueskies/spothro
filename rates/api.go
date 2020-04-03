@@ -34,7 +34,7 @@ type DayRate struct {
 
 // ParkingTimesRequest is used to deserialize and hold the input time ranges
 type ParkingTimesRequest struct {
-	StartTime time.Time `form:"start_time", json:"start_time"`
+	StartTime time.Time `form:"start_time" json:"start_time"`
 	EndTime   time.Time `form:"end_time" json:"end_time"`
 }
 
@@ -45,8 +45,9 @@ type API struct {
 }
 
 // NewAPI returns a new instance of API. It is seeded with the default JSON data file
-func NewAPI() (*API, error) {
-	seedRatesJSON, err := os.Open("seed_rates.json")
+func NewAPI(seedRatesFile string) (*API, error) {
+	// os.Chdir("/rates")
+	seedRatesJSON, err := os.Open(seedRatesFile)
 	if err != nil {
 		return nil, err
 	}

@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewAPI(t *testing.T) {
-	a, err := NewAPI()
+	a, err := NewAPI("seed_rates.json")
 	assert.Nil(t, err)
 	assert.NotNil(t, a)
 	assert.NotNil(t, a.rateMap)
@@ -26,7 +26,7 @@ func TestPut(t *testing.T) {
 		Rates: []RateDetail{rd},
 	}
 
-	a, err := NewAPI()
+	a, err := NewAPI("seed_rates.json")
 	assert.Nil(t, err)
 	// assert that the ratemap is seeded during instantiation
 	assert.NotNil(t, a.rateMap)
@@ -49,7 +49,7 @@ func TestPut(t *testing.T) {
 }
 
 func TestGetRate(t *testing.T) {
-	a, err := NewAPI()
+	a, err := NewAPI("seed_rates.json")
 	assert.Nil(t, err)
 
 	testCases := []struct {
@@ -87,5 +87,17 @@ func TestGetRate(t *testing.T) {
 		assert.Equal(t, tt.err, err)
 		assert.Equal(t, tt.rate, rate)
 	}
+}
 
+func TestArmytime(t *testing.T) {
+	a, err := NewAPI("seed_rates.json")
+	assert.Nil(t, err)
+
+	tm := time.Date(2020, 4, 4, 12, 15, 0, 0, time.UTC)
+	armyTime := a.armyTime(tm)
+	assert.Equal(t, float32(1215), armyTime)
+
+	tm = time.Date(2020, 4, 4, 12, 15, 23, 101, time.UTC)
+	armyTime = a.armyTime(tm)
+	assert.Equal(t, float32(1215.0063), armyTime)
 }
