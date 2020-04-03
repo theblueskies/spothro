@@ -1,8 +1,6 @@
 package rates
 
 import (
-	"fmt"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
@@ -79,14 +77,12 @@ func GetRate(s Service) gin.HandlerFunc {
 			})
 			return
 		}
-		h := p.StartTime.Hour()
-		m := p.StartTime.Minute()
-		fmt.Println(h, m)
+
 		rate, err := s.Get(p)
 		if err != nil {
-			c.JSON(500, RateResponse{
+			c.JSON(404, RateResponse{
 				Status:  "error",
-				Message: "error retrieving rate",
+				Message: err.Error(),
 				Rate:    0,
 			})
 			return

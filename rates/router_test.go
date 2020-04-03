@@ -93,23 +93,65 @@ func TestPutRatesHandler(t *testing.T) {
 }
 
 func TestGetRateHandler(t *testing.T) {
-	m := &mockService{}
-	r := NewRouter(m)
+	testCases := []struct {
+		name          string
+		m             *mockService
+		startTime     string
+		endTime       string
+		getCallCount  int
+		outStatusCode int
+		outResponse   RateResponse
+	}{
+		{
+			name: "get rate success",
+			m: &mockService{
+				rate: 1750,
+			},
+			startTime:     "2015-07-01T07:20:00-05:00",
+			endTime:       "2015-07-01T08:00:00-05:00",
+			getCallCount:  1,
+			outStatusCode: 200,
+			outResponse: RateResponse{
+				Status:  "success",
+				Message: "success retrieving rate",
+				Rate:    1750,
+			},
+		},
+		{
+			name: "rate unavailable",
+			m: &mockService{
+				rate: 0,
+				err:  errors.New("unavailable"),
+			},
+			startTime:     "2015-07-04T07:00:00+05:00",
+			endTime:       "2015-07-04T20:00:00+05:00",
+			getCallCount:  1,
+			outStatusCode: 404,
+			outResponse: RateResponse{
+				Status:  "error",
+				Message: "unavailable",
+				Rate:    0,
+			},
+		},
+	}
+	for _, tt := range testCases {
+		r := NewRouter(tt.m)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/rate", nil)
+		q := req.URL.Query()
+		q.Add("start_time", tt.startTime)
+		q.Add("end_time", tt.endTime)
 
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "/rate", nil)
-	q := req.URL.Query()
-	q.Add("start_time", "2015-07-01T07:20:00-05:00")
-	q.Add("end_time", "2015-07-01T08:00:00-05:00")
+		req.URL.RawQuery = q.Encode()
+		r.ServeHTTP(w, req)
 
-	req.URL.RawQuery = q.Encode()
-	r.ServeHTTP(w, req)
+		var b RateResponse
+		err := json.Unmarshal(w.Body.Bytes(), &b)
+		assert.Nil(t, err)
 
-	var b PutResponse
-	err := json.Unmarshal(w.Body.Bytes(), &b)
-	assert.Nil(t, err)
-
-	assert.Equal(t, 200, w.Code)
+		assert.Equal(t, tt.outStatusCode, w.Code)
+		assert.Equal(t, tt.outResponse, b)
+	}
 }
 
 type mockService struct {
