@@ -1,5 +1,15 @@
 # spothro
 
+Prerequisites to start the service: Docker
+To start the service:
+`
+make build
+make dev
+`
+
+This will start the service on port 9000
+
+
 Build an API (1) that allows a user to enter a date time range (2) and get back the price at which they would be charged to park for that time span (3)
 
     The application publishes an API that computes a price for an input datetime range
