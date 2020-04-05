@@ -107,13 +107,11 @@ func (a *API) Put(ir IncomingRates) error {
 		// the map based on the key of the weekday
 		for _, day := range strings.Split(r.Days, ",") {
 			properDayName, ok := dayMap[day]
-			fmt.Println(properDayName)
 			if !ok {
 				return fmt.Errorf("abbreviated day not present: %s", day)
 			}
 			// build time with localized time zone
 			localizedTime, err := TimeIn(time.Now(), r.TZ)
-			fmt.Println(localizedTime, localizedTime.Weekday())
 			if err != nil {
 				return err
 			}
@@ -144,8 +142,6 @@ func (a *API) Put(ir IncomingRates) error {
 				price:     r.Price,
 				tz:        "UTC",
 			}
-			fmt.Println(properDayName)
-			fmt.Println(dr)
 			// Check if there is an existing key of the weekday in the map
 			v, ok := m[properDayName]
 			// If there is a key, then append the new rate detail to the key
@@ -169,14 +165,12 @@ func (a *API) Put(ir IncomingRates) error {
 // Get returns the rate of parking for a given time range
 func (a *API) Get(p ParkingTimesRequest) (rate int, err error) {
 	// If the parking time range span over more than the same day then return error
-	fmt.Println(p.StartTime, p.EndTime)
 	utcStart := p.StartTime.UTC()
 	utcEnd := p.EndTime.UTC()
-	fmt.Println(utcStart, utcEnd)
 
 	// Get the rates for the specific weekday
-	weekday := p.StartTime.Weekday()
-	rates, ok := a.rateMap[weekday.String()]
+	weekday := p.StartTime.Weekday().String()
+	rates, ok := a.rateMap[weekday]
 	if !ok {
 		return 0, fmt.Errorf("could not find rates for day %s", weekday)
 	}
