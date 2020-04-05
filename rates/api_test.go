@@ -34,6 +34,7 @@ func TestPut(t *testing.T) {
 
 	assert.NotNil(t, a.rateMap)
 	mondayRate := a.rateMap["Monday"]
+	// the expected rate has been transformed to UTC time
 	expectedMondayDayRate := []DayRate{DayRate{
 		day:       "Monday",
 		startTime: float32(1400),
@@ -53,6 +54,8 @@ func TestGetRate(t *testing.T) {
 	a, err := NewAPI("seed_rates.json")
 	assert.Nil(t, err)
 
+	loc, e := time.LoadLocation("Asia/Calcutta") // +5:30 UTC
+	assert.Nil(t, e)
 	testCases := []struct {
 		p    ParkingTimesRequest
 		rate int
@@ -68,8 +71,8 @@ func TestGetRate(t *testing.T) {
 		},
 		{
 			p: ParkingTimesRequest{
-				StartTime: time.Date(2020, 4, 3, 12, 30, 0, 0, time.UTC),
-				EndTime:   time.Date(2020, 4, 4, 19, 30, 0, 0, time.UTC),
+				StartTime: time.Date(2020, 4, 3, 8, 30, 0, 0, loc),
+				EndTime:   time.Date(2020, 4, 3, 20, 30, 0, 0, loc),
 			},
 			rate: 0,
 			err:  errors.New("unavailable"),
@@ -88,6 +91,20 @@ func TestGetRate(t *testing.T) {
 		assert.Equal(t, tt.err, err)
 		assert.Equal(t, tt.rate, rate)
 	}
+}
+
+func TestGetRateWhenNoRatePresent(t *testing.T) {
+	a, err := NewAPI("seed_rates.json")
+	assert.Nil(t, err)
+
+	a.Put(IncomingRates{}) // Clear out all rates
+	p := ParkingTimesRequest{
+		StartTime: time.Date(2020, 4, 4, 07, 00, 0, 0, time.UTC),
+		EndTime:   time.Date(2020, 4, 4, 20, 00, 0, 0, time.UTC),
+	}
+	rate, err := a.Get(p)
+	assert.Equal(t, errors.New("could not find rates for day Saturday"), err)
+	assert.Equal(t, 0, rate)
 }
 
 func TestArmytime(t *testing.T) {
