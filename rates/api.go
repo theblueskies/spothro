@@ -92,29 +92,60 @@ func (a *API) Put(ir IncomingRates) error {
 		if err != nil {
 			return err
 		}
+		startTimeHours := startTime / 100
+		startTimeMins := startTime % 100
 		endTime, err := strconv.Atoi(timeRange[1])
+		if err != nil {
+			return err
+		}
+		endTimeHours := endTime / 100
+		endTimeMins := endTime % 100
 		if err != nil {
 			return err
 		}
 		// Iterate over all the days in a rate detail and make entries in
 		// the map based on the key of the weekday
 		for _, day := range strings.Split(r.Days, ",") {
-			// The incoming rates come in as an abbreviated form - mon, tues, wed
-			// The service needs to resolve the abbreviated form into the full name of the weekday
-			// This is essential because the time package, returns only the full form of
-			// the weekday eg: Monday, Tuesday, Wednesday etc
 			properDayName, ok := dayMap[day]
+			fmt.Println(properDayName)
 			if !ok {
 				return fmt.Errorf("abbreviated day not present: %s", day)
 			}
+			// build time with localized time zone
+			localizedTime, err := TimeIn(time.Now(), r.TZ)
+			fmt.Println(localizedTime, localizedTime.Weekday())
+			if err != nil {
+				return err
+			}
+			d := 0
+			for {
+				s := localizedTime.Weekday().String()
+				if s != properDayName {
+					d++
+					localizedTime = localizedTime.AddDate(0, 0, 1) // Increment by one day until we hit the desired weekday
+					continue
+				}
+				break
+			}
+
+			utcStartTime := time.Date(localizedTime.Year(), localizedTime.Month(), localizedTime.Day(), startTimeHours, startTimeMins, 0, 0, localizedTime.Location()).UTC()
+			utcEndTime := time.Date(localizedTime.Year(), localizedTime.Month(), localizedTime.Day(), endTimeHours, endTimeMins, 0, 0, localizedTime.Location()).UTC()
+			armyStartTime := a.armyTime(utcStartTime)
+			armyEndTime := a.armyTime(utcEndTime)
+			if armyEndTime < armyStartTime {
+				armyEndTime += 2400
+			}
+
 			// Populate struct with time range and rate for a specific weekday
 			dr := DayRate{
-				day:       properDayName,
-				startTime: float32(startTime),
-				endTime:   float32(endTime),
+				day:       utcStartTime.Weekday().String(),
+				startTime: float32(armyStartTime),
+				endTime:   float32(armyEndTime),
 				price:     r.Price,
-				tz:        r.TZ,
+				tz:        "UTC",
 			}
+			fmt.Println(properDayName)
+			fmt.Println(dr)
 			// Check if there is an existing key of the weekday in the map
 			v, ok := m[properDayName]
 			// If there is a key, then append the new rate detail to the key
@@ -125,6 +156,7 @@ func (a *API) Put(ir IncomingRates) error {
 			}
 			// If there was no key, then create a new entry for it in the map
 			m[properDayName] = []DayRate{dr}
+
 		}
 	}
 	// Lock it with a mutex before swapping the maps
@@ -137,9 +169,11 @@ func (a *API) Put(ir IncomingRates) error {
 // Get returns the rate of parking for a given time range
 func (a *API) Get(p ParkingTimesRequest) (rate int, err error) {
 	// If the parking time range span over more than the same day then return error
-	if p.StartTime.Day() != p.EndTime.Day() || p.StartTime.Month() != p.EndTime.Month() || p.StartTime.Year() != p.EndTime.Year() {
-		return 0, errors.New("start and end time days do not match")
-	}
+	fmt.Println(p.StartTime, p.EndTime)
+	utcStart := p.StartTime.UTC()
+	utcEnd := p.EndTime.UTC()
+	fmt.Println(utcStart, utcEnd)
+
 	// Get the rates for the specific weekday
 	weekday := p.StartTime.Weekday()
 	rates, ok := a.rateMap[weekday.String()]
@@ -149,8 +183,8 @@ func (a *API) Get(p ParkingTimesRequest) (rate int, err error) {
 
 	// Check if the parking time range is contained within the defined ranges of rates
 	for _, r := range rates {
-		startHours := a.armyTime(p.StartTime)
-		endHours := a.armyTime(p.EndTime)
+		startHours := a.armyTime(utcStart)
+		endHours := a.armyTime(utcEnd)
 
 		if startHours >= r.startTime && endHours <= r.endTime {
 			return r.price, nil
@@ -169,4 +203,16 @@ func (a *API) armyTime(tm time.Time) float32 {
 	armyTime := float32(h)*100 + minAsHours + secAsHours
 
 	return armyTime
+}
+
+// TimeIn returns the time in UTC if the name is "" or "UTC".
+// It returns the local time if the name is "Local".
+// Otherwise, the name is taken to be a location name in
+// the IANA Time Zone database, such as "Africa/Lagos".
+func TimeIn(t time.Time, timeZone string) (time.Time, error) {
+	loc, err := time.LoadLocation(timeZone)
+	if err == nil {
+		t = t.In(loc)
+	}
+	return t, err
 }

@@ -85,7 +85,8 @@ func GetRate(s Service) gin.HandlerFunc {
 			return
 		}
 		// Call the Get function of the service to attempt to retrieve the rate for the given time range
-		rate, err := s.Get(p)
+		a, _ := NewAPI("seed_rates.json")
+		rate, err := a.Get(p)
 		// If there was an error, return a 404 (not found) with a response containing the error
 		// When a rate is "unavailable", it will be sent as the value of Message
 		if err != nil {

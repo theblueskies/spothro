@@ -36,12 +36,13 @@ func TestPut(t *testing.T) {
 	mondayRate := a.rateMap["Monday"]
 	expectedMondayDayRate := []DayRate{DayRate{
 		day:       "Monday",
-		startTime: 900,
-		endTime:   2100,
+		startTime: float32(1400),
+		endTime:   float32(2600),
 		price:     1500,
-		tz:        "America/Chicago"},
+		tz:        "UTC"},
 	}
 	assert.Equal(t, expectedMondayDayRate, mondayRate)
+	assert.Equal(t, expectedMondayDayRate[0].endTime, mondayRate[0].endTime)
 
 	// assert that the new rate was put in place. sunday is not present in the new rate
 	_, ok := a.rateMap["sun"]
@@ -59,7 +60,7 @@ func TestGetRate(t *testing.T) {
 	}{
 		{
 			p: ParkingTimesRequest{
-				StartTime: time.Date(2020, 4, 3, 12, 30, 0, 0, time.UTC),
+				StartTime: time.Date(2020, 4, 3, 14, 30, 0, 0, time.UTC),
 				EndTime:   time.Date(2020, 4, 3, 19, 30, 0, 0, time.UTC),
 			},
 			rate: 2000,
@@ -71,7 +72,7 @@ func TestGetRate(t *testing.T) {
 				EndTime:   time.Date(2020, 4, 4, 19, 30, 0, 0, time.UTC),
 			},
 			rate: 0,
-			err:  errors.New("start and end time days do not match"),
+			err:  errors.New("unavailable"),
 		},
 		{
 			p: ParkingTimesRequest{
