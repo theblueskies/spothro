@@ -52,6 +52,7 @@ func PutRates(s Service) gin.HandlerFunc {
 		// Call the Put function of the service to store the new rates and replace the older rates
 		err = s.Put(ir)
 		if err != nil {
+			recordPutFail()
 			// If there was an error in Put, then return a 500 with an error response
 			c.JSON(500, PutResponse{
 				Status:  "error",
@@ -61,6 +62,7 @@ func PutRates(s Service) gin.HandlerFunc {
 		}
 		// If there was no error and the rates were successfully stored, then
 		// return a 200 with a success response.
+		recordPutSuccess()
 		c.JSON(200, PutResponse{
 			Status:  "success",
 			Message: "Successfully updated rates",
@@ -77,6 +79,7 @@ func GetRate(s Service) gin.HandlerFunc {
 		err := c.Bind(&p)
 		// If there was an error in binding, then return a 400 with a response about the error
 		if err != nil {
+			recordGetRateBadRequest()
 			c.JSON(400, RateResponse{
 				Status:  "error",
 				Message: err.Error(),
@@ -89,6 +92,7 @@ func GetRate(s Service) gin.HandlerFunc {
 		// If there was an error, return a 404 (not found) with a response containing the error
 		// When a rate is "unavailable", it will be sent as the value of Message
 		if err != nil {
+			recordGeRatetNotFound()
 			c.JSON(404, RateResponse{
 				Status:  "error",
 				Message: err.Error(),
@@ -98,6 +102,7 @@ func GetRate(s Service) gin.HandlerFunc {
 		}
 		// If the service finds the rate, then it returns a  200 and send
 		// a response containing the rate
+		recordGetRateSuccess()
 		c.JSON(200, RateResponse{
 			Status:  "success",
 			Message: "success retrieving rate",

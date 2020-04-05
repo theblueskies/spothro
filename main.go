@@ -2,9 +2,12 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/spf13/viper"
 	"github.com/theblueskies/spothro/rates"
+
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -26,6 +29,11 @@ func main() {
 		panic(err)
 	}
 	log.Println(port)
+
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":2112", nil)
+	}()
 	// Get an instance of the router and pass in the API as parameter
 	// rates.API implements the rates.Service interface
 	router := rates.NewRouter(api)
