@@ -103,7 +103,7 @@ func TestGetRateWhenNoRatePresent(t *testing.T) {
 		EndTime:   time.Date(2020, 4, 4, 20, 00, 0, 0, time.UTC),
 	}
 	rate, err := a.Get(p)
-	assert.Equal(t, errors.New("could not find rates for day Saturday"), err)
+	assert.Equal(t, errors.New("unavailable"), err)
 	assert.Equal(t, 0, rate)
 }
 

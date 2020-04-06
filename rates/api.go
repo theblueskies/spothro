@@ -177,7 +177,7 @@ func (a *API) Get(p ParkingTimesRequest) (rate int, err error) {
 	weekday := p.StartTime.Weekday().String()
 	rates, ok := a.rateMap[weekday]
 	if !ok {
-		return 0, fmt.Errorf("could not find rates for day %s", weekday)
+		return 0, errors.New("unavailable")
 	}
 
 	// Check if the parking time range is contained within the defined ranges of rates
