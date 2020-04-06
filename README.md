@@ -34,13 +34,14 @@ The router expects an interface to be passed in. The API struct satisfies the Se
 1. GET call needs to have the datetime parameters encoded
 `
 GET 127.0.0.1:9000/rate?start_time=2015-07-04T07%3A00%3A00%2B05%3A00&end_time=2015-07-04T20%3A00%3A00%2B05%3A00
-
-
 `
-PUT needs a body with the rates to update the rates on the service:  
+
+
+2. PUT needs a body with the rates to update the rates on the service:  
 Example:  
+
 `
-2. PUT /rates
+PUT /rates
 {
     "rates": [
         {
