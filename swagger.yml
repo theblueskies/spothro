@@ -8,6 +8,18 @@ info:
 schemes:
 - http
 paths:
+  /health:
+    get:
+      summary: check to see if the service is running
+      produces:
+        - application/json
+      tags:
+        - health
+      responses:
+        default:
+          description: health check response
+          schema:
+            $ref: "#/definitions/defaultResponse"
   /rate:
     get:
       summary: get a rate for a given time range
@@ -54,7 +66,7 @@ paths:
         default:
           description: error response
           schema:
-            $ref: "#/definitions/putResponse"
+            $ref: "#/definitions/defaultResponse"
 
 
 definitions:
@@ -85,7 +97,7 @@ definitions:
         type: integer
         format: int32
 
-  putResponse:
+  defaultResponse:
     type: object
     properties:
       status:

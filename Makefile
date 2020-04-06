@@ -11,3 +11,5 @@ dev:
 test:
 	go clean -testcache
 	go test ./rates
+
+start: build dev
