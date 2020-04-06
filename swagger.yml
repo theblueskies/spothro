@@ -1,0 +1,94 @@
+---
+swagger: "2.0"
+info:
+  description: Documentation of rates service
+  title: A service implementing rates
+  version: 1.0.0
+
+schemes:
+- http
+paths:
+  /rate:
+    get:
+      summary: get a rate for a given time range
+      produces:
+        - application/json
+      tags:
+        - rates
+      parameters:
+        - name: start_time
+          in: query
+          type: string
+          format: date-time
+        - name: end_time
+          in: query
+          type: string
+          format: date-time
+      responses:
+        200:
+          description: return the applicable rate
+          schema:
+            $ref: "#/definitions/rateResponse"
+        default:
+          description: error response
+          schema:
+            $ref: "#/definitions/rateResponse"
+  /rates:
+    put:
+      summary: updates the rates
+      tags:
+        - rates
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: rates
+          description: The new rates
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/incomingRates"
+      responses:
+        default:
+          description: error response
+          schema:
+            $ref: "#/definitions/putResponse"
+
+
+definitions:
+  rateResponse:
+    type: object
+    properties:
+      message:
+        type: string
+        readOnly: true
+      error:
+         type: string
+         readOnly: true
+      rate_value:
+        type: integer
+        format: int32
+        readOnly: true
+
+  incomingRates:
+    type: object
+    properties:
+      days:
+        type: string
+      times:
+        type: string
+      tz:
+        type: string
+      price:
+        type: integer
+        format: int32
+
+  putResponse:
+    type: object
+    properties:
+      status:
+        type: string
+      message:
+        type: string
