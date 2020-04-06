@@ -7,3 +7,7 @@ build:
 
 dev:
 	docker run -p 9000:9000 rate-service
+
+test:
+	go clean -testcache
+	go test ./rates
