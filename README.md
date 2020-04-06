@@ -10,11 +10,17 @@ Run tests with:
 `
 make test
 `
+This will start the service on port 9000   
 
 
-This will start the service on port 9000  
+# What's included:  
+1. Rates Service  
+2. Dockerfile  
+3. Additional Metrics endpoint  
+4. Swagger Spec in swagger.yml  
 
-# Description of rates service
+
+# Description of rates service  
 All initial rates are seeded from rates/seed_rates.json. When the rates are stored, they are first converted to their UTC time equivalents and then stored on the key of weekday.  
 
 When a request comes in asking for a rate, the input time ranges are first converted to their UTC time equivalents and the rates are then looked up.   
