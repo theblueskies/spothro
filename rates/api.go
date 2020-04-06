@@ -166,6 +166,10 @@ func (a *API) Put(ir IncomingRates) error {
 
 // Get returns the rate of parking for a given time range
 func (a *API) Get(p ParkingTimesRequest) (rate int, err error) {
+	// Rates will not span multiple days
+	if p.StartTime.Day() != p.EndTime.Day() || p.StartTime.Month() != p.EndTime.Month() || p.StartTime.Year() != p.EndTime.Year() {
+		return 0, errors.New("unavailable")
+	}
 	// Transform localized time to UTC time
 	utcStart := p.StartTime.UTC()
 	utcEnd := p.EndTime.UTC()

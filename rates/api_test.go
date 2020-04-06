@@ -57,11 +57,13 @@ func TestGetRate(t *testing.T) {
 	loc, e := time.LoadLocation("Asia/Calcutta") // +5:30 UTC
 	assert.Nil(t, e)
 	testCases := []struct {
+		name string
 		p    ParkingTimesRequest
 		rate int
 		err  error
 	}{
 		{
+			name: "Rate returned successfully",
 			p: ParkingTimesRequest{
 				StartTime: time.Date(2020, 4, 3, 14, 30, 0, 0, time.UTC),
 				EndTime:   time.Date(2020, 4, 3, 19, 30, 0, 0, time.UTC),
@@ -70,6 +72,7 @@ func TestGetRate(t *testing.T) {
 			err:  nil,
 		},
 		{
+			name: "Fails when it spans multiple rates on the same day, not UTC timezone",
 			p: ParkingTimesRequest{
 				StartTime: time.Date(2020, 4, 3, 8, 30, 0, 0, loc),
 				EndTime:   time.Date(2020, 4, 3, 20, 30, 0, 0, loc),
@@ -78,9 +81,28 @@ func TestGetRate(t *testing.T) {
 			err:  errors.New("unavailable"),
 		},
 		{
+			name: "Fails when it spans multiple rates on the same day, UTC timezone",
 			p: ParkingTimesRequest{
 				StartTime: time.Date(2020, 4, 4, 07, 00, 0, 0, time.UTC),
 				EndTime:   time.Date(2020, 4, 4, 20, 00, 0, 0, time.UTC),
+			},
+			rate: 0,
+			err:  errors.New("unavailable"),
+		},
+		{
+			name: "Fails when it spans multiple days, UTC timezone",
+			p: ParkingTimesRequest{
+				StartTime: time.Date(2020, 4, 3, 14, 30, 0, 0, time.UTC),
+				EndTime:   time.Date(2020, 6, 3, 19, 30, 0, 0, time.UTC),
+			},
+			rate: 0,
+			err:  errors.New("unavailable"),
+		},
+		{
+			name: "Fails when it spans multiple days, non-UTC timezone",
+			p: ParkingTimesRequest{
+				StartTime: time.Date(2020, 2, 3, 14, 30, 0, 0, loc),
+				EndTime:   time.Date(2020, 3, 3, 19, 30, 0, 0, loc),
 			},
 			rate: 0,
 			err:  errors.New("unavailable"),
