@@ -1,4 +1,4 @@
-# spothero
+# spot
 
 Prerequisites to start the service: Docker
 To start the service:
